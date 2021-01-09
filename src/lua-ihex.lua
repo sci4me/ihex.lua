@@ -23,6 +23,7 @@ end
 local band   = bit.band
 local lshift = bit.lshift
 local rshift = bit.rshift
+local tohex  = bit.tohex
 local strfmt = string.format
 local substr = string.sub
 local min    = math.min
@@ -328,8 +329,6 @@ local function encode(data, options)
     local lineBreakAtEndOfFile = option(options, "lineBreakAtEndOfFile", DEFAULT_ENCODE_OPTIONS)
 
     local line_break = crlf and "\r\n" or "\n"
-    local u1format   = upperCaseHex and "%02X" or "%02x"
-    local u2format   = upperCaseHex and "%04X" or "%04x"
 
     assert(bytesPerLine == floor(bytesPerLine), "bytesPerLine must be an integer, got " .. tostring(bytesPerLine))
     assert(bytesPerLine >= 1, "bytesPerLine must be >= 1")
@@ -342,21 +341,37 @@ local function encode(data, options)
     local addr = 0
     local upper = 0
 
-    local function u1(x)
-        result[#result + 1] = strfmt(u1format, x)
-        sum = sum + x
-    end
+    local u1, u2, u1format, u2format
+    if jit then
+        u1format = upperCaseHex and -2 or 2
+        u2format = upperCaseHex and -4 or 4
 
-    local function u2(x)
-        result[#result + 1] = strfmt(u2format, x)
-        local hi = rshift(band(x, 0xFF00), 8)
-        local lo = band(x, 0xFF)
-        sum = sum + hi + lo
-    end
+        u1 = function(x)
+            result[#result + 1] = tohex(x, u1format)
+            sum = sum + x
+        end
 
-    local function write_checksum()
-        result[#result + 1] = strfmt(u1format, band(0x100 - sum, 0xFF))
-        sum = 0
+        u2 = function(x)
+            result[#result + 1] = tohex(x, u2format)
+            local hi = rshift(band(x, 0xFF00), 8)
+            local lo = band(x, 0xFF)
+            sum = sum + hi + lo
+        end
+    else
+        u1format = upperCaseHex and "%02X" or "%02x"
+        u2format = upperCaseHex and "%04X" or "%04x"
+        
+        u1 = function(x)
+            result[#result + 1] = strfmt(u1format, x)
+            sum = sum + x
+        end
+
+        u2 = function(x)
+            result[#result + 1] = strfmt(u2format, x)
+            local hi = rshift(band(x, 0xFF00), 8)
+            local lo = band(x, 0xFF)
+            sum = sum + hi + lo
+        end
     end
 
     while bytesLeft > 0 do
@@ -368,7 +383,8 @@ local function encode(data, options)
             sum = sum + 2
             u1(REC_EXTENDED_LINEAR_ADDRESS)
             u2(up)
-            write_checksum()
+            u1(band(0x100 - sum, 0xFF))
+            sum = 0
             result[#result + 1] = line_break
         end
 
@@ -376,10 +392,9 @@ local function encode(data, options)
 
         local nbytes = min(bytesPerLine, bytesLeft)
         u1(nbytes)
-
         u2(band(addr, 0xFFFF))
-
         u1(REC_DATA)
+        -- TODO: Optimize this loop
         for _ = 1, nbytes do
             local x = data[index]
             if x ~= floor(x) then error("expected integer, got float") end
@@ -390,7 +405,8 @@ local function encode(data, options)
         bytesLeft = bytesLeft - nbytes
         addr = addr + nbytes
 
-        write_checksum()
+        u1(band(0x100 - sum, 0xFF))
+        sum = 0
         result[#result + 1] = line_break
     end
 
