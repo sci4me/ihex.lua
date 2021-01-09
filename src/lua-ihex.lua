@@ -37,7 +37,6 @@ local REC_EXTENDED_LINEAR_ADDRESS  = 0x04
 local REC_START_LINEAR_ADDRESS     = 0x05
 
 local function is_int(x)
-    assert(type(x) == "number", "expected number, got " .. type(x))
     return x == math.floor(x)
 end
 
@@ -270,7 +269,8 @@ local function decode(str, options)
                     count = count + 1
                 end
             elseif type == REC_EOF then
-                assert(u1() == 0xFF)
+                local checksum = u1()
+                assert(checksum == 0xFF, "expected checksum of EOF record to be 0xFF, got " .. checksum)
                 eof = true
                 break
             elseif type == REC_EXTENDED_SEGMENT_ADDRESS then
@@ -374,7 +374,6 @@ local function encode(data, options)
     local upper = 0
 
     local function emit(x)
-        assert(type(x) == "string")
         result[#result + 1] = x
     end
 
@@ -398,7 +397,6 @@ local function encode(data, options)
     end
 
     local function u2(x)
-        assert(is_int(x))
         u1(rshift(band(x, 0xFF00), 8))
         u1(band(x, 0xFF))
     end
