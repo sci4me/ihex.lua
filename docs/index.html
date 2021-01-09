@@ -1,0 +1,346 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>lua-ihex documentation</title>
+    <link rel="stylesheet" href="ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>lua-ihex</h1>
+
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Tables">Tables</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><strong>lua-ihex</strong></li>
+</ul>
+<h2>Topics</h2>
+<ul class="">
+  <li><a href="topics/README.md.html">README</a></li>
+</ul>
+<h2>Examples</h2>
+<ul class="nowrap">
+  <li><a href="examples/lua-ihex_spec.lua.html">lua-ihex_spec.lua</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>lua-ihex</code></h1>
+<p>Intel Hex encoder/decoder.</p>
+<p> An opinionated, mostly-feature-complete,
+ probably-not-that-buggy Intel Hex encoding
+ and decoding utility library for Lua.</p>
+
+<p> <a href="index.html#">lua-ihex</a> only has one dependency: <code>bit32</code>.
+ Support for using <a href="index.html#">lua-ihex</a> without <code>bit32</code>
+ may be added in the future.</p>
+    <h3>Info:</h3>
+    <ul>
+        <li><strong>Copyright</strong>: Scitoshi Nakayobro 2021</li>
+        <li><strong>License</strong>: MIT</li>
+        <li><strong>Author</strong>: sci4me</li>
+    </ul>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#decode">decode (str[, options])</a></td>
+	<td class="summary">Decode an Intel Hex encoded string to a byte array.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#encode">encode (data[, options])</a></td>
+	<td class="summary">Encode a byte array in the Intel Hex format.</td>
+	</tr>
+</table>
+<h2><a href="#Tables">Tables</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#DEFAULT_DECODE_OPTIONS">DEFAULT_DECODE_OPTIONS</a></td>
+	<td class="summary">Default decoding options to be used
+ if no options are specified for the
+ <a href="index.html#decode">decode</a> function.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#DEFAULT_ENCODE_OPTIONS">DEFAULT_ENCODE_OPTIONS</a></td>
+	<td class="summary">Default encoding options to be used
+ if no options are specified for the
+ <a href="index.html#encode">encode</a> function.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "decode"></a>
+    <strong>decode (str[, options])</strong>
+    </dt>
+    <dd>
+    Decode an Intel Hex encoded string to a byte array.
+ The returned table is an array of decoded bytes,
+ which may or may not be contiguous. Intel Hex allows
+ for specifying disjoint blocks of data, therefore,
+ there may be indices between blocks of valid data
+ that have the value <code>nil</code>.</p>
+
+<p> The first index that may contain data is <code>0</code>. Since
+ Lua made the mistake of using <code>1</code>-based indexing,
+ the length of the table will be off by one.
+ Therefore, the resultant table will also contain
+ the field <code>count</code> which contains the number of data
+ bytes specified by the input string.</p>
+
+<p> This function allows an optional second argument
+ which must be a table containing options specifying
+ how the input string should be interpreted.
+ If no second argument is specified, the default
+ options (<a href="index.html#DEFAULT_DECODE_OPTIONS">DEFAULT_DECODE_OPTIONS</a>) will be used.</p>
+
+<p> This function can optionally handle the
+ start segment address and start linear address
+ Intel Hex record types.</p>
+
+<p> If start segment address records are enabled in
+ the options table and the input string contains
+ such a record, the table indices <code>CS</code> and <code>IP</code> will
+ be set.
+ To enable start segment address records, set
+ <code>allowStartSegmentAddress</code> to true in the options
+ table.</p>
+
+<p> If start linear address records are enabled in
+ the options table and the input string contains
+ such a record, the table index <code>EIP</code> will be set.
+ To enable start linear address records, set
+ <code>allowStartLinearAddress</code> to true in the options
+ table.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">str</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         A string containing data encoded
+ in the Intel Hex format.
+        </li>
+        <li><span class="parameter">options</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         A table specifying how the input
+ string should be interpreted. see <a href="index.html#DEFAULT_DECODE_OPTIONS">DEFAULT_DECODE_OPTIONS</a>
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         A table containing each data byte specified
+ by the input string, indexed by its respective numeric address.
+ This table also contains the field <code>count</code> which is the
+ total number of data bytes decoded from the input string.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "encode"></a>
+    <strong>encode (data[, options])</strong>
+    </dt>
+    <dd>
+    Encode a byte array in the Intel Hex format.
+ Unlike the <a href="index.html#decode">decode</a> function, <a href="index.html#encode">encode</a> uses <code>1</code>-based indexing!
+ In the future, support may be added to allow for the correct
+ indexing style to be used.</p>
+
+<p> This function will encode a byte array starting at index <code>1</code>
+ and ending at index <code>#data</code> in the Intel Hex format and return
+ it as a string.</p>
+
+<p> Currently <a href="index.html#">lua-ihex</a> does not support encoding disjoint blocks
+ of data, as well as start segment address and start linear address
+ records. Support for these features may be added in the future.</p>
+
+<p> This function allows an optional second argument which must be
+ a table containing options specifying how the input data
+ should be encoded.
+ If no second argument is specified, the default options
+ (<a href="index.html#DEFAULT_ENCODE_OPTIONS">DEFAULT_ENCODE_OPTIONS</a>) will be used.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">data</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         An array of unsigned bytes to encode.
+        </li>
+        <li><span class="parameter">options</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         A table specifying how the input
+ data should be encoded.
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+        The Intel Hex encoded representation of the
+ input byte array.
+    </ol>
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Tables"></a>Tables</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "DEFAULT_DECODE_OPTIONS"></a>
+    <strong>DEFAULT_DECODE_OPTIONS</strong>
+    </dt>
+    <dd>
+    Default decoding options to be used
+ if no options are specified for the
+ <a href="index.html#decode">decode</a> function.
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">skipNonColonLines</span>
+         If set to true, <a href="index.html#decode">decode</a>
+ will ignore lines that do not begin with a <code>:</code>
+         (<em>default</em> false)
+        </li>
+        <li><span class="parameter">allowOverwrite</span>
+         If set to true, <a href="index.html#decode">decode</a>
+ will not raise an error if the parsed Intel Hex
+ data specifies a data byte at the same address
+ multiple times.
+         (<em>default</em> false)
+        </li>
+        <li><span class="parameter">allowExtendedSegmentAddress</span>
+         If set to true,
+ <a href="index.html#decode">decode</a> will not raise an error if the parsed
+ Intel Hex data contains an extended segment address
+ record.
+         (<em>default</em> true)
+        </li>
+        <li><span class="parameter">allowStartSegmentAddress</span>
+         If set to true,
+ <a href="index.html#decode">decode</a> will not raise an error if the parsed
+ Intel Hex data contains a start segment address
+ record.
+         (<em>default</em> false)
+        </li>
+        <li><span class="parameter">allowExtendedLinearAddress</span>
+         If set to true,
+ <a href="index.html#decode">decode</a> will not raise an error if the parsed
+ Intel Hex data contains an extended linear address
+ record.
+         (<em>default</em> true)
+        </li>
+        <li><span class="parameter">allowStartLinearAddress</span>
+         If set to true,
+ <a href="index.html#decode">decode</a> will not raise an error if the parsed
+ Intel Hex data contains a start linear address
+ record.
+         (<em>default</em> false)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "DEFAULT_ENCODE_OPTIONS"></a>
+    <strong>DEFAULT_ENCODE_OPTIONS</strong>
+    </dt>
+    <dd>
+    Default encoding options to be used
+ if no options are specified for the
+ <a href="index.html#encode">encode</a> function.
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">bytesPerLine</span>
+         The maximum
+ number of bytes to be encoded per line.
+         (<em>default</em> 0x20)
+        </li>
+        <li><span class="parameter">upperCaseHex</span>
+         If set to true,
+ <a href="index.html#encode">encode</a> will use upper-case hex digits.
+         (<em>default</em> true)
+        </li>
+        <li><span class="parameter">crlf</span>
+         If set to true,
+ <a href="index.html#encode">encode</a> will use Windows-style line breaks
+ (<code>\r\n</code>). Otherwise, the correct style of line
+ break will be used (<code>\n</code>).
+         (<em>default</em> false)
+        </li>
+        <li><span class="parameter">lineBreaksAtEndOfFile</span>
+         If set
+ to true, <a href="index.html#encode">encode</a> will insert a line break after
+ the last line (EOF record).
+         (<em>default</em> false)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2021-01-09 03:30:24 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>
