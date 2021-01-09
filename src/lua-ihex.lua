@@ -349,12 +349,8 @@ local function encode(data, options)
     local crlf                 = option(options, "crlf", DEFAULT_ENCODE_OPTIONS)
     local lineBreakAtEndOfFile = option(options, "lineBreakAtEndOfFile", DEFAULT_ENCODE_OPTIONS)
 
-    local line_break
-    if crlf then
-        line_break = "\r\n"
-    else
-        line_break = "\n"
-    end
+    local line_break = crlf and "\r\n" or "\n"
+    local u1format   = upperCaseHex and "%02X" or "%02x"
 
     if not is_int(bytesPerLine) then
         error("bytesPerLine must be an integer, got " .. tostring(bytesPerLine))
@@ -377,23 +373,12 @@ local function encode(data, options)
         result[#result + 1] = x
     end
 
-    local u1
-    if upperCaseHex then
-        u1 = function(x)
-            assert(is_int(x))
-            assert(x >= 0)
-            assert(x <= 255)
-            emit(strfmt("%02X", x))
-            sum = sum + x
-        end
-    else
-        u1 = function(x)
-            assert(is_int(x))
-            assert(x >= 0)
-            assert(x <= 255)
-            emit(strfmt("%02x", x))
-            sum = sum + x
-        end
+    local function u1(x)
+        assert(is_int(x))
+        assert(x >= 0)
+        assert(x <= 255)
+        emit(strfmt(u1format, x))
+        sum = sum + x
     end
 
     local function u2(x)
