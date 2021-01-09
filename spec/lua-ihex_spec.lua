@@ -1,3 +1,5 @@
+local bit = require "bit32"
+
 math.randomseed(os.time())
 
 -- TODO: more thorough test suite!
@@ -81,6 +83,22 @@ describe("lua-ihex", function()
 
                 assert(hex == expected)
             end)
+        end
+    end)
+
+    it("encodes large data correctly", function()
+        local N = 0x30000
+
+        local data = {}
+        for i = 1, N do
+            data[i] = bit.band(i, 0xFF)
+        end
+        local hex = ihex.encode(data)
+        local bin = ihex.decode(hex)
+        for i = 1, N do
+            local x = bin[i - 1]
+            local y = bit.band(i, 0xFF)
+            assert(x == y, string.format("expected %02X at address %08X, got %02X", y, i, x)) 
         end
     end)
 end)

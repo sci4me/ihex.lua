@@ -13,7 +13,12 @@
 -- @license MIT
 -- @copyright Scitoshi Nakayobro 2021
 
-local bit = require "bit32"
+local bit    = require "bit32"
+
+local band   = bit.band
+local lshift = bit.lshift
+local rshift = bit.rshift
+local strfmt = string.format
 
 local HEX_DECODE_LUT = {
     ['0'] = 0x0, ['1'] = 0x1, ['2'] = 0x2, ['3'] = 0x3,
@@ -212,10 +217,10 @@ local function decode(str, options)
     end
 
     local function verify_checksum()
-        local computed_checksum = bit.band(0x100 - sum, 0xFF)
+        local computed_checksum = band(0x100 - sum, 0xFF)
         local checksum = u1()
         if computed_checksum ~= checksum then
-            error(string.format("bad checksum; expected %02X, got %02X", checksum, computed_checksum))
+            error(strfmt("bad checksum; expected %02X, got %02X", checksum, computed_checksum))
         end
     end
 
@@ -253,10 +258,10 @@ local function decode(str, options)
 
             if type == REC_DATA then
                 for i = 0, nbytes-1 do
-                    local actual_addr = base + bit.band(addr + i, 0xFFFF)
+                    local actual_addr = base + band(addr + i, 0xFFFF)
                     local x = u1()
                     if not allowOverwrite and result[actual_addr] then
-                        error(string.format("unexpected overwrite at address %08X", actual_addr))
+                        error(strfmt("unexpected overwrite at address %08X", actual_addr))
                     end
                     result[actual_addr] = x
                     count = count + 1
@@ -269,11 +274,11 @@ local function decode(str, options)
             elseif type == REC_EXTENDED_SEGMENT_ADDRESS then
                 assert(allowExtendedSegmentAddress, "unexpected extended segment address record")
                 assert(nbytes == 2, "extended segment address record must contain 2 bytes, got " .. nbytes)
-                base = bit.lshift(u2(), 4)
+                base = lshift(u2(), 4)
                 verify_checksum()
             elseif type == REC_START_SEGMENT_ADDRESS then
                 assert(allowStartSegmentAddress, "unexpected start segment address record")
-                assert(addr == 0, string.format("start segment address record address must be 0x0000, got %04X", addr))
+                assert(addr == 0, strfmt("start segment address record address must be 0x0000, got %04X", addr))
                 assert(nbytes == 4, "start segment address record must contain 4 bytes, got " .. nbytes)
                 result.CS = u2()
                 result.IP = u2()
@@ -281,28 +286,25 @@ local function decode(str, options)
             elseif type == REC_EXTENDED_LINEAR_ADDRESS then
                 assert(allowExtendedLinearAddress, "unexpected extended linear address record")
                 assert(nbytes == 2, "extended linear address record must contain 2 bytes, got " .. nbytes)
-                base = bit.lshift(u2(), 16)
+                base = lshift(u2(), 16)
                 verify_checksum()
             elseif type == REC_START_LINEAR_ADDRESS then
                 assert(allowStartLinearAddress, "unexpected start linear address record")
-                assert(addr == 0, string.format("start linear address record address must be 0x0000, got %04X", addr))
+                assert(addr == 0, strfmt("start linear address record address must be 0x0000, got %04X", addr))
                 assert(nbytes == 4, "start linear address record must contain 4 bytes, got " .. nbytes)
-                result.EIP = bit.lshift(u2(), 16) + u2()
+                result.EIP = lshift(u2(), 16) + u2()
                 verify_checksum()
             else
-                error(string.format("unexpected record type %02X", type))
+                error(strfmt("unexpected record type %02X", type))
             end
 
             skip_newline()
         end
     end
 
-    if not eof then
-        assert(more(), "unexpected end of data; expected EOF record")
-    end
+    assert(eof, "unexpected end of data; expected EOF record")
 
     result.count = count
-
     return result
 end
 
@@ -363,6 +365,7 @@ local function encode(data, options)
     local index = 1
     local bytesLeft = #data
     local addr = 0
+    local upper = 0
 
     local function emit(x)
         assert(type(x) == "string")
@@ -375,7 +378,7 @@ local function encode(data, options)
             assert(is_int(x))
             assert(x >= 0)
             assert(x <= 255)
-            emit(string.format("%02X", x))
+            emit(strfmt("%02X", x))
             sum = sum + x
         end
     else
@@ -383,19 +386,19 @@ local function encode(data, options)
             assert(is_int(x))
             assert(x >= 0)
             assert(x <= 255)
-            emit(string.format("%02x", x))
+            emit(strfmt("%02x", x))
             sum = sum + x
         end
     end
 
     local function u2(x)
         assert(is_int(x))
-        u1(bit.rshift(bit.band(x, 0xFF00), 8))
-        u1(bit.band(x, 0xFF))
+        u1(rshift(band(x, 0xFF00), 8))
+        u1(band(x, 0xFF))
     end
 
     local function write_checksum()
-        u1(bit.band(0x100 - sum, 0xFF))
+        u1(band(0x100 - sum, 0xFF))
         sum = 0
     end
 
@@ -408,16 +411,26 @@ local function encode(data, options)
     end
 
     while bytesLeft > 0 do
+        local up = rshift(band(addr, 0xFFFF0000), 16)
+        if up ~= upper then
+            upper = up
+
+            emit(':')
+            u1(2)
+            u2(0)
+            u1(REC_EXTENDED_LINEAR_ADDRESS)
+            u2(up)
+            write_checksum()
+            line_break()
+        end
+
         emit(':')
 
         local nbytes = math.min(bytesPerLine, bytesLeft)
         u1(nbytes)
 
-        -- @todo write extended linear address record if needed! otherwise
-        -- this function will only be able to encode up to 64k bytes!
+        u2(band(addr, 0xFFFF))
 
-        u2(addr)
-        
         u1(REC_DATA)
         for _ = 1, nbytes do
             local x = data[index]
@@ -428,7 +441,6 @@ local function encode(data, options)
         addr = addr + nbytes
 
         write_checksum()
-
         line_break()
     end
 
@@ -472,10 +484,10 @@ local _LICENSE = [[
 -- @export decode
 -- @export encode
 return {
-    _DESCRIPTION = "Intel Hex encoder/decoder",
-    _URL = "https://github.com/sci4me/lua-ihex",
-    _VERSION = "lua-ihex 0.1.0",
-    _LICENSE = _LICENSE,
+    _DESCRIPTION           = "Intel Hex encoder/decoder",
+    _URL                   = "https://github.com/sci4me/lua-ihex",
+    _VERSION               = "lua-ihex 0.1.0",
+    _LICENSE               = _LICENSE,
     DEFAULT_DECODE_OPTIONS = DEFAULT_DECODE_OPTIONS,
     DEFAULT_ENCODE_OPTIONS = DEFAULT_ENCODE_OPTIONS,
     decode                 = decode,

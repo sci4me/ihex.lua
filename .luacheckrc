@@ -5,6 +5,5 @@ ignore = { "611" }
 
 exclude_files = {
     ".lua",
-    ".luarocks",
-    ".install"
+    ".luarocks"
 }
