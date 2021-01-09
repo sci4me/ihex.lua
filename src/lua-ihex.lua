@@ -455,7 +455,7 @@ local _LICENSE = [[
 return {
     _DESCRIPTION           = "Intel Hex encoder/decoder",
     _URL                   = "https://github.com/sci4me/lua-ihex",
-    _VERSION               = "lua-ihex 0.1.0",
+    _VERSION               = "lua-ihex 0.1.1",
     _LICENSE               = _LICENSE,
     DEFAULT_DECODE_OPTIONS = DEFAULT_DECODE_OPTIONS,
     DEFAULT_ENCODE_OPTIONS = DEFAULT_ENCODE_OPTIONS,
