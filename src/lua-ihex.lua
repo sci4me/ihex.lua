@@ -154,9 +154,7 @@ local DEFAULT_ENCODE_OPTIONS = {
 -- total number of data bytes decoded from the input string.
 local function decode(str, options)
     if options then
-        if type(options) ~= "table" then
-            error("expected table, got " .. type(options))
-        end
+        assert(type(options) == "table", "expected table, got " .. type(options))
     else
         options = {}
     end
@@ -189,9 +187,7 @@ local function decode(str, options)
 
     local function skip_newline()
         local a = next()
-        if not is_newline(a) then
-            error("expected line feed or carriage return")
-        end
+        assert(is_newline(a), "expected line feed or carriage return")
         if a == '\r' and peek() == '\n' then
             next()
         end
@@ -337,9 +333,7 @@ local function encode(data, options)
     end
 
     if options then
-        if type(options) ~= "table" then
-            error("expected table, got " .. type(options))
-        end
+        assert(type(options) == "table", "expected table, got " .. type(options))
     else
         options = {}
     end
@@ -352,15 +346,9 @@ local function encode(data, options)
     local line_break = crlf and "\r\n" or "\n"
     local u1format   = upperCaseHex and "%02X" or "%02x"
 
-    if not is_int(bytesPerLine) then
-        error("bytesPerLine must be an integer, got " .. tostring(bytesPerLine))
-    end
-    if bytesPerLine < 1 then
-        error("bytesPerLine must be >= 1")
-    end
-    if bytesPerLine > 255 then
-        error("bytesPerLine must be <= 255")
-    end
+    assert(is_int(bytesPerLine), "bytesPerLine must be an integer, got " .. tostring(bytesPerLine))
+    assert(bytesPerLine >= 1, "bytesPerLine must be >= 1")
+    assert(bytesPerLine <= 255, "bytesPerLine must be <= 255")
 
     local result = {}
     local sum = 0
