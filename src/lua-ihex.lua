@@ -45,6 +45,10 @@ local function is_newline(c)
     return c == '\r' or c == '\n'
 end
 
+local function option(opts, name, defaults)
+    return opts[name] and opts[name] or defaults[name]
+end
+
 --- Default decoding options to be used
 -- if no options are specified for the
 -- `decode` function.
@@ -158,12 +162,12 @@ local function decode(str, options)
         options = {}
     end
 
-    local skipNonColonLines = options.skipNonColonLines and options.skipNonColonLines or DEFAULT_DECODE_OPTIONS.skipNonColonLines
-    local allowOverwrite = options.allowOverwrite and options.allowOverwrite or DEFAULT_DECODE_OPTIONS.allowOverwrite
-    local allowExtendedSegmentAddress = options.allowExtendedSegmentAddress and options.allowExtendedSegmentAddress or DEFAULT_DECODE_OPTIONS.allowExtendedSegmentAddress
-    local allowStartSegmentAddress = options.allowStartSegmentAddress and options.allowStartSegmentAddress or DEFAULT_DECODE_OPTIONS.allowStartSegmentAddress
-    local allowExtendedLinearAddress = options.allowExtendedLinearAddress and options.allowExtendedLinearAddress or DEFAULT_DECODE_OPTIONS.allowExtendedLinearAddress
-    local allowStartLinearAddress = options.allowStartLinearAddress and options.allowStartLinearAddress or DEFAULT_DECODE_OPTIONS.allowStartLinearAddress
+    local skipNonColonLines           = option(options, "skipNonColonLines", DEFAULT_DECODE_OPTIONS)
+    local allowOverwrite              = option(options, "allowOverwrite", DEFAULT_DECODE_OPTIONS)
+    local allowExtendedSegmentAddress = option(options, "allowExtendedSegmentAddress", DEFAULT_DECODE_OPTIONS)
+    local allowStartSegmentAddress    = option(options, "allowStartSegmentAddress", DEFAULT_DECODE_OPTIONS)
+    local allowExtendedLinearAddress  = option(options, "allowExtendedLinearAddress", DEFAULT_DECODE_OPTIONS)
+    local allowStartLinearAddress     = option(options, "allowStartLinearAddress", DEFAULT_DECODE_OPTIONS)
 
     local index = 1
     local len   = str:len()
@@ -233,7 +237,6 @@ local function decode(str, options)
         local skip = false
         local sc = next()
         if sc ~= ':' then
-            print(skipNonColonLines)
             if skipNonColonLines then
                 while not is_newline(peek()) do
                     next()
@@ -266,7 +269,6 @@ local function decode(str, options)
                     result[actual_addr] = x
                     count = count + 1
                 end
-                verify_checksum()
             elseif type == REC_EOF then
                 assert(u1() == 0xFF)
                 eof = true
@@ -275,29 +277,26 @@ local function decode(str, options)
                 assert(allowExtendedSegmentAddress, "unexpected extended segment address record")
                 assert(nbytes == 2, "extended segment address record must contain 2 bytes, got " .. nbytes)
                 base = lshift(u2(), 4)
-                verify_checksum()
             elseif type == REC_START_SEGMENT_ADDRESS then
                 assert(allowStartSegmentAddress, "unexpected start segment address record")
                 assert(addr == 0, strfmt("start segment address record address must be 0x0000, got %04X", addr))
                 assert(nbytes == 4, "start segment address record must contain 4 bytes, got " .. nbytes)
                 result.CS = u2()
                 result.IP = u2()
-                verify_checksum()
             elseif type == REC_EXTENDED_LINEAR_ADDRESS then
                 assert(allowExtendedLinearAddress, "unexpected extended linear address record")
                 assert(nbytes == 2, "extended linear address record must contain 2 bytes, got " .. nbytes)
                 base = lshift(u2(), 16)
-                verify_checksum()
             elseif type == REC_START_LINEAR_ADDRESS then
                 assert(allowStartLinearAddress, "unexpected start linear address record")
                 assert(addr == 0, strfmt("start linear address record address must be 0x0000, got %04X", addr))
                 assert(nbytes == 4, "start linear address record must contain 4 bytes, got " .. nbytes)
                 result.EIP = lshift(u2(), 16) + u2()
-                verify_checksum()
             else
                 error(strfmt("unexpected record type %02X", type))
             end
 
+            verify_checksum()
             skip_newline()
         end
     end
@@ -345,10 +344,17 @@ local function encode(data, options)
         options = {}
     end
 
-    local bytesPerLine         = options.bytesPerLine and options.bytesPerLine or DEFAULT_ENCODE_OPTIONS.bytesPerLine
-    local upperCaseHex         = options.upperCaseHex and options.upperCaseHex or DEFAULT_ENCODE_OPTIONS.upperCaseHex
-    local crlf                 = options.crlf and options.crlf or DEFAULT_ENCODE_OPTIONS.crlf
-    local lineBreakAtEndOfFile = options.lineBreakAtEndOfFile and options.lineBreakAtEndOfFile or DEFAULT_ENCODE_OPTIONS.lineBreakAtEndOfFile
+    local bytesPerLine         = option(options, "bytesPerLine", DEFAULT_ENCODE_OPTIONS)
+    local upperCaseHex         = option(options, "upperCaseHex", DEFAULT_ENCODE_OPTIONS)
+    local crlf                 = option(options, "crlf", DEFAULT_ENCODE_OPTIONS)
+    local lineBreakAtEndOfFile = option(options, "lineBreakAtEndOfFile", DEFAULT_ENCODE_OPTIONS)
+
+    local line_break
+    if crlf then
+        line_break = "\r\n"
+    else
+        line_break = "\n"
+    end
 
     if not is_int(bytesPerLine) then
         error("bytesPerLine must be an integer, got " .. tostring(bytesPerLine))
@@ -402,14 +408,6 @@ local function encode(data, options)
         sum = 0
     end
 
-    local function line_break()
-        if crlf then
-            emit("\r\n")
-        else
-            emit("\n")
-        end
-    end
-
     while bytesLeft > 0 do
         local up = rshift(band(addr, 0xFFFF0000), 16)
         if up ~= upper then
@@ -421,7 +419,7 @@ local function encode(data, options)
             u1(REC_EXTENDED_LINEAR_ADDRESS)
             u2(up)
             write_checksum()
-            line_break()
+            emit(line_break)
         end
 
         emit(':')
@@ -441,13 +439,13 @@ local function encode(data, options)
         addr = addr + nbytes
 
         write_checksum()
-        line_break()
+        emit(line_break)
     end
 
     emit(":00000001FF")
 
     if lineBreakAtEndOfFile then
-        line_break()
+        emit(line_break)
     end
 
     return table.concat(result)
