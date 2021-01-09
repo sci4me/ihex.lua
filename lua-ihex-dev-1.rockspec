@@ -18,7 +18,10 @@ description = {
     homepage = "https://github.com/sci4me/lua-ihex",
     issues_url = "https://github.com/sci4me/lua-ihex/issues",
     maintainer = "sci4me",
-    license = "MIT"
+    license = "MIT",
+    labels = {
+        "serialization"
+    }
 }
 
 dependencies = {
