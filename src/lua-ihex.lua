@@ -13,12 +13,18 @@
 -- @license MIT
 -- @copyright Scitoshi Nakayobro 2021
 
-local bit    = require "bit32"
+local bit
+if jit then
+    bit = require "bit"
+else
+    bit = require "bit32"
+end
 
 local band   = bit.band
 local lshift = bit.lshift
 local rshift = bit.rshift
 local strfmt = string.format
+local substr = string.sub
 
 local HEX_DECODE_LUT = {
     ['0'] = 0x0, ['1'] = 0x1, ['2'] = 0x2, ['3'] = 0x3,
@@ -170,17 +176,9 @@ local function decode(str, options)
     local len   = str:len()
     local sum   = 0
 
-    local function more()
-        return index <= len
-    end
-
-    local function peek()
-        return str:sub(index, index)
-    end
-
     local function next()
-        assert(more(), "unexpected end of data")
-        local c = peek()
+        if index > len then error("unexpected end of data") end
+        local c = substr(str, index, index)
         index = index + 1
         return c
     end
@@ -188,31 +186,28 @@ local function decode(str, options)
     local function skip_newline()
         local a = next()
         assert(is_newline(a), "expected line feed or carriage return")
-        if a == '\r' and peek() == '\n' then
-            next()
+        if a == '\r' and substr(str, index, index) == '\n' then
+            index = index + 1
         end
     end
 
     local function u1()
-        local chi = next()
-        local clo = next()
-        local hi = HEX_DECODE_LUT[chi]
-        local lo = HEX_DECODE_LUT[clo]
-        if not hi then
-            error("expected hex digit, got '" .. tostring(chi) .. "'")
-        end
-        if not lo then
-            error("expected hex digit, got '" .. tostring(clo) .. "'")
-        end
-        local x = 16 * hi + lo
-        sum = sum + x
-        return x
+        if index + 1 > len then error("unexpected end of data") end
+        local y = tonumber(substr(str, index, index + 1), 16)
+        index = index + 2
+        sum = sum + y
+        return y
     end
 
     local function u2()
-        local hi = u1()
-        local lo = u1()
-        return 256 * hi + lo
+        -- TODO: Can this somehow be further optimized?
+        if index + 3 > len then error("unexpected end of data") end
+        local hi = tonumber(substr(str, index, index + 1), 16)
+        local lo = tonumber(substr(str, index + 2, index + 3), 16)
+        index = index + 4
+        sum = sum + hi
+        sum = sum + lo
+        return lshift(hi, 8) + lo
     end
 
     local function verify_checksum()
@@ -228,13 +223,13 @@ local function decode(str, options)
     local base = 0
     local eof = false
 
-    while more() do
+    while index <= len do
         local skip = false
         local sc = next()
         if sc ~= ':' then
             if skipNonColonLines then
-                while not is_newline(peek()) do
-                    next()
+                while index <= len and not is_newline(substr(str, index, index)) do
+                    index = index + 1
                 end
                 skip_newline()
                 skip = true
@@ -250,11 +245,15 @@ local function decode(str, options)
 
         if not skip then
             sum = 0
+            -- TODO: Would be interesting to see how the profiling results
+            -- compare between doing u1, u2, u1 vs. doing u4 and then using
+            -- bit to pull the separate data fields out of the 32-bit number.
             local nbytes = u1()
             local addr = u2()
             local type = u1()
 
             if type == REC_DATA then
+                -- TODO: Optimize this loop
                 for i = 0, nbytes-1 do
                     local actual_addr = base + band(addr + i, 0xFFFF)
                     local x = u1()
