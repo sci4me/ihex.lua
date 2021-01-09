@@ -399,10 +399,6 @@ ul ol {
   margin-top: 0px;
 }
 
-a:target + * {
-  background-color: #FF9;
-}
-
 pre .comment {
   color: #558817;
 }
