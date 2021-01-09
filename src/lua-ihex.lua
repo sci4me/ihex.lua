@@ -25,15 +25,8 @@ local lshift = bit.lshift
 local rshift = bit.rshift
 local strfmt = string.format
 local substr = string.sub
-
-local HEX_DECODE_LUT = {
-    ['0'] = 0x0, ['1'] = 0x1, ['2'] = 0x2, ['3'] = 0x3,
-    ['4'] = 0x4, ['5'] = 0x5, ['6'] = 0x6, ['7'] = 0x7,
-    ['8'] = 0x8, ['9'] = 0x9, ['a'] = 0xA, ['A'] = 0xA,
-    ['b'] = 0xB, ['B'] = 0xB, ['c'] = 0xC, ['C'] = 0xC,
-    ['d'] = 0xD, ['D'] = 0xD, ['e'] = 0xE, ['E'] = 0xE,
-    ['f'] = 0xF, ['F'] = 0xF
-}
+local min    = math.min
+local floor  = math.floor
 
 local REC_DATA                     = 0x00
 local REC_EOF                      = 0x01
@@ -41,14 +34,6 @@ local REC_EXTENDED_SEGMENT_ADDRESS = 0x02
 local REC_START_SEGMENT_ADDRESS    = 0x03
 local REC_EXTENDED_LINEAR_ADDRESS  = 0x04
 local REC_START_LINEAR_ADDRESS     = 0x05
-
-local function is_int(x)
-    return x == math.floor(x)
-end
-
-local function is_newline(c)
-    return c == '\r' or c == '\n'
-end
 
 local function option(opts, name, defaults)
     return opts[name] and opts[name] or defaults[name]
@@ -185,7 +170,7 @@ local function decode(str, options)
 
     local function skip_newline()
         local a = next()
-        assert(is_newline(a), "expected line feed or carriage return")
+        assert(a == '\r' or a == '\n', "expected line feed or carriage return")
         if a == '\r' and substr(str, index, index) == '\n' then
             index = index + 1
         end
@@ -205,8 +190,7 @@ local function decode(str, options)
         local hi = tonumber(substr(str, index, index + 1), 16)
         local lo = tonumber(substr(str, index + 2, index + 3), 16)
         index = index + 4
-        sum = sum + hi
-        sum = sum + lo
+        sum = sum + hi + lo
         return lshift(hi, 8) + lo
     end
 
@@ -228,7 +212,8 @@ local function decode(str, options)
         local sc = next()
         if sc ~= ':' then
             if skipNonColonLines then
-                while index <= len and not is_newline(substr(str, index, index)) do
+                sc = substr(str, index, index)
+                while index <= len and not (sc == '\r' or sc == '\n') do
                     index = index + 1
                 end
                 skip_newline()
@@ -344,8 +329,9 @@ local function encode(data, options)
 
     local line_break = crlf and "\r\n" or "\n"
     local u1format   = upperCaseHex and "%02X" or "%02x"
+    local u2format   = upperCaseHex and "%04X" or "%04x"
 
-    assert(is_int(bytesPerLine), "bytesPerLine must be an integer, got " .. tostring(bytesPerLine))
+    assert(bytesPerLine == floor(bytesPerLine), "bytesPerLine must be an integer, got " .. tostring(bytesPerLine))
     assert(bytesPerLine >= 1, "bytesPerLine must be >= 1")
     assert(bytesPerLine <= 255, "bytesPerLine must be <= 255")
 
@@ -356,25 +342,20 @@ local function encode(data, options)
     local addr = 0
     local upper = 0
 
-    local function emit(x)
-        result[#result + 1] = x
-    end
-
     local function u1(x)
-        assert(is_int(x))
-        assert(x >= 0)
-        assert(x <= 255)
-        emit(strfmt(u1format, x))
+        result[#result + 1] = strfmt(u1format, x)
         sum = sum + x
     end
 
     local function u2(x)
-        u1(rshift(band(x, 0xFF00), 8))
-        u1(band(x, 0xFF))
+        result[#result + 1] = strfmt(u2format, x)
+        local hi = rshift(band(x, 0xFF00), 8)
+        local lo = band(x, 0xFF)
+        sum = sum + hi + lo
     end
 
     local function write_checksum()
-        u1(band(0x100 - sum, 0xFF))
+        result[#result + 1] = strfmt(u1format, band(0x100 - sum, 0xFF))
         sum = 0
     end
 
@@ -383,18 +364,17 @@ local function encode(data, options)
         if up ~= upper then
             upper = up
 
-            emit(':')
-            u1(2)
-            u2(0)
+            result[#result + 1] = ':020000'
+            sum = sum + 2
             u1(REC_EXTENDED_LINEAR_ADDRESS)
             u2(up)
             write_checksum()
-            emit(line_break)
+            result[#result + 1] = line_break
         end
 
-        emit(':')
+        result[#result + 1] = ':'
 
-        local nbytes = math.min(bytesPerLine, bytesLeft)
+        local nbytes = min(bytesPerLine, bytesLeft)
         u1(nbytes)
 
         u2(band(addr, 0xFFFF))
@@ -402,6 +382,8 @@ local function encode(data, options)
         u1(REC_DATA)
         for _ = 1, nbytes do
             local x = data[index]
+            if x ~= floor(x) then error("expected integer, got float") end
+            if x < 0 or x > 0xFF then error("expected number between [0,FF], got " .. x) end
             index = index + 1
             u1(x)
         end
@@ -409,13 +391,13 @@ local function encode(data, options)
         addr = addr + nbytes
 
         write_checksum()
-        emit(line_break)
+        result[#result + 1] = line_break
     end
 
-    emit(":00000001FF")
+    result[#result + 1] = ":00000001FF"
 
     if lineBreakAtEndOfFile then
-        emit(line_break)
+        result[#result + 1] = line_break
     end
 
     return table.concat(result)
