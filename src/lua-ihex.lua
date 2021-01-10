@@ -60,6 +60,7 @@ end
 
 -- TODO: Add an option to default the values inbetween
 -- disjoint blocks of data to 0 or perhaps to any byte.
+
 --- Default decoding options to be used
 -- if no options are specified for the
 -- `decode` function.
