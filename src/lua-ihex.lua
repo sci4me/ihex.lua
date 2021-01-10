@@ -13,6 +13,23 @@
 -- @license MIT
 -- @copyright Scitoshi Nakayobro 2021
 
+-- TODO: Don't know how this slipped my mind: can't we
+-- use string.pack/string.unpack if they're available?
+-- I don't _actually_ know, gotta double-check the
+-- reference; I haven't really used that API.
+--
+-- Okay actually, probably not? I guess. :/
+-- Unless there's a way (that would be worth it)
+-- that I'm not thinking of right now. Hmh.
+--
+-- I mean, we could use it I guess, for encoding
+-- binary data to/from strings, it's just that
+-- it won't handle the ASCII conversion for us.
+-- So, I'm not sure if it would really provied
+-- any benefit at that point. Will have to mess
+-- around with it!
+--              - sci4me, 1/9/21
+
 local bit
 if jit then
     bit = require "bit"
@@ -27,8 +44,9 @@ local tohex  = bit.tohex
 local strfmt = string.format
 local substr = string.sub
 local min    = math.min
-local floor  = math.floor
 
+-- TODO: @Speed instead of converting the hex digits to a number and comparing
+-- with these constants, as numbers, just compare them as strings! Duh!
 local REC_DATA                     = 0x00
 local REC_EOF                      = 0x01
 local REC_EXTENDED_SEGMENT_ADDRESS = 0x02
@@ -40,6 +58,8 @@ local function option(opts, name, defaults)
     return opts[name] and opts[name] or defaults[name]
 end
 
+-- TODO: Add an option to default the values inbetween
+-- disjoint blocks of data to 0 or perhaps to any byte.
 --- Default decoding options to be used
 -- if no options are specified for the
 -- `decode` function.
@@ -330,7 +350,7 @@ local function encode(data, options)
 
     local line_break = crlf and "\r\n" or "\n"
 
-    assert(bytesPerLine == floor(bytesPerLine), "bytesPerLine must be an integer, got " .. tostring(bytesPerLine))
+    assert(bytesPerLine % 1 == 0, "bytesPerLine must be an integer, got " .. tostring(bytesPerLine))
     assert(bytesPerLine >= 1, "bytesPerLine must be >= 1")
     assert(bytesPerLine <= 255, "bytesPerLine must be <= 255")
 
@@ -397,7 +417,7 @@ local function encode(data, options)
         -- TODO: Optimize this loop
         for _ = 1, nbytes do
             local x = data[index]
-            if x ~= floor(x) then error("expected integer, got float") end
+            if x % 1 ~= 0 then error("expected integer, got float") end
             if x < 0 or x > 0xFF then error("expected number between [0,FF], got " .. x) end
             index = index + 1
             u1(x)
