@@ -32,7 +32,7 @@ dependencies = {
 build = {
     type = "builtin",
     modules = {
-        ["lua-ihex"] = "src/lua-ihex.lua"
+        ["lua-ihex"] = "src/lua-ihex/lua-ihex.lua"
     },
     copy_directories = {
         "docs",

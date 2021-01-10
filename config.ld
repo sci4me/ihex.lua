@@ -6,5 +6,5 @@ dir = "docs"
 style = true
 examples = { "./spec/lua-ihex_spec.lua" }
 format = "discount"
-file = "./src/lua-ihex.lua"
+file = "./src/lua-ihex/lua-ihex.lua"
 readme = "README.md"
