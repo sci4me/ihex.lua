@@ -71,11 +71,11 @@
 <h2><a href="#Functions">Functions</a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#decode">decode (str[, options])</a></td>
+	<td class="name" nowrap><a href="#ihex.decode">ihex.decode (str[, options])</a></td>
 	<td class="summary">Decode an Intel Hex encoded string to a byte array.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#encode">encode (data[, options])</a></td>
+	<td class="name" nowrap><a href="#ihex.encode">ihex.encode (data[, options])</a></td>
 	<td class="summary">Encode a byte array in the Intel Hex format.</td>
 	</tr>
 </table>
@@ -85,13 +85,13 @@
 	<td class="name" nowrap><a href="#DEFAULT_DECODE_OPTIONS">DEFAULT_DECODE_OPTIONS</a></td>
 	<td class="summary">Default decoding options to be used
  if no options are specified for the
- <a href="index.html#decode">decode</a> function.</td>
+ <a href="index.html#ihex.decode">decode</a> function.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#DEFAULT_ENCODE_OPTIONS">DEFAULT_ENCODE_OPTIONS</a></td>
 	<td class="summary">Default encoding options to be used
  if no options are specified for the
- <a href="index.html#encode">encode</a> function.</td>
+ <a href="index.html#ihex.encode">encode</a> function.</td>
 	</tr>
 </table>
 
@@ -103,8 +103,8 @@
 
     <dl class="function">
     <dt>
-    <a name = "decode"></a>
-    <strong>decode (str[, options])</strong>
+    <a name = "ihex.decode"></a>
+    <strong>ihex.decode (str[, options])</strong>
     </dt>
     <dd>
     Decode an Intel Hex encoded string to a byte array.
@@ -177,12 +177,12 @@
 
 </dd>
     <dt>
-    <a name = "encode"></a>
-    <strong>encode (data[, options])</strong>
+    <a name = "ihex.encode"></a>
+    <strong>ihex.encode (data[, options])</strong>
     </dt>
     <dd>
     Encode a byte array in the Intel Hex format.
- Unlike the <a href="index.html#decode">decode</a> function, <a href="index.html#encode">encode</a> uses <code>1</code>-based indexing!
+ Unlike the <a href="index.html#ihex.decode">decode</a> function, <a href="index.html#ihex.encode">encode</a> uses <code>1</code>-based indexing!
  In the future, support may be added to allow for the correct
  indexing style to be used.</p>
 
@@ -238,18 +238,18 @@
     <dd>
     Default decoding options to be used
  if no options are specified for the
- <a href="index.html#decode">decode</a> function.
+ <a href="index.html#ihex.decode">decode</a> function.
 
 
     <h3>Fields:</h3>
     <ul>
         <li><span class="parameter">skipNonColonLines</span>
-         If set to true, <a href="index.html#decode">decode</a>
+         If set to true, <a href="index.html#ihex.decode">decode</a>
  will ignore lines that do not begin with a <code>:</code>
          (<em>default</em> false)
         </li>
         <li><span class="parameter">allowOverwrite</span>
-         If set to true, <a href="index.html#decode">decode</a>
+         If set to true, <a href="index.html#ihex.decode">decode</a>
  will not raise an error if the parsed Intel Hex
  data specifies a data byte at the same address
  multiple times.
@@ -257,28 +257,28 @@
         </li>
         <li><span class="parameter">allowExtendedSegmentAddress</span>
          If set to true,
- <a href="index.html#decode">decode</a> will not raise an error if the parsed
+ <a href="index.html#ihex.decode">decode</a> will not raise an error if the parsed
  Intel Hex data contains an extended segment address
  record.
          (<em>default</em> true)
         </li>
         <li><span class="parameter">allowStartSegmentAddress</span>
          If set to true,
- <a href="index.html#decode">decode</a> will not raise an error if the parsed
+ <a href="index.html#ihex.decode">decode</a> will not raise an error if the parsed
  Intel Hex data contains a start segment address
  record.
          (<em>default</em> false)
         </li>
         <li><span class="parameter">allowExtendedLinearAddress</span>
          If set to true,
- <a href="index.html#decode">decode</a> will not raise an error if the parsed
+ <a href="index.html#ihex.decode">decode</a> will not raise an error if the parsed
  Intel Hex data contains an extended linear address
  record.
          (<em>default</em> true)
         </li>
         <li><span class="parameter">allowStartLinearAddress</span>
          If set to true,
- <a href="index.html#decode">decode</a> will not raise an error if the parsed
+ <a href="index.html#ihex.decode">decode</a> will not raise an error if the parsed
  Intel Hex data contains a start linear address
  record.
          (<em>default</em> false)
@@ -297,7 +297,7 @@
     <dd>
     Default encoding options to be used
  if no options are specified for the
- <a href="index.html#encode">encode</a> function.
+ <a href="index.html#ihex.encode">encode</a> function.
 
 
     <h3>Fields:</h3>
@@ -309,19 +309,19 @@
         </li>
         <li><span class="parameter">upperCaseHex</span>
          If set to true,
- <a href="index.html#encode">encode</a> will use upper-case hex digits.
+ <a href="index.html#ihex.encode">encode</a> will use upper-case hex digits.
          (<em>default</em> true)
         </li>
         <li><span class="parameter">crlf</span>
          If set to true,
- <a href="index.html#encode">encode</a> will use Windows-style line breaks
+ <a href="index.html#ihex.encode">encode</a> will use Windows-style line breaks
  (<code>\r\n</code>). Otherwise, the correct style of line
  break will be used (<code>\n</code>).
          (<em>default</em> false)
         </li>
         <li><span class="parameter">lineBreaksAtEndOfFile</span>
          If set
- to true, <a href="index.html#encode">encode</a> will insert a line break after
+ to true, <a href="index.html#ihex.encode">encode</a> will insert a line break after
  the last line (EOF record).
          (<em>default</em> false)
         </li>
@@ -339,7 +339,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2021-01-10 11:18:48 </i>
+<i style="float:right;">Last updated 2021-01-10 15:37:58 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

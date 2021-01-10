@@ -30,6 +30,35 @@
 -- around with it!
 --              - sci4me, 1/9/21
 
+local ihex = {
+    _DESCRIPTION    = "Intel Hex encoder/decoder",
+    _URL            = "https://github.com/sci4me/lua-ihex",
+    _VERSION        = "lua-ihex 0.1.1",
+    _LICENSE        = [[
+        MIT License
+
+        Copyright (c) 2021 Scitoshi Nakayobro
+
+        Permission is hereby granted, free of charge, to any person obtaining a copy
+        of this software and associated documentation files (the "Software"), to deal
+        in the Software without restriction, including without limitation the rights
+        to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+        copies of the Software, and to permit persons to whom the Software is
+        furnished to do so, subject to the following conditions:
+
+        The above copyright notice and this permission notice shall be included in all
+        copies or substantial portions of the Software.
+
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+        LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+        OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+        SOFTWARE.
+    ]]
+}
+
 local bit
 if jit then
     bit = require "bit"
@@ -95,6 +124,7 @@ local DEFAULT_DECODE_OPTIONS = {
     allowExtendedLinearAddress     = true,
     allowStartLinearAddress        = false
 }
+ihex.DEFAULT_DECODE_OPTIONS = DEFAULT_DECODE_OPTIONS
 
 --- Default encoding options to be used
 -- if no options are specified for the
@@ -117,6 +147,7 @@ local DEFAULT_ENCODE_OPTIONS = {
     crlf                           = false,
     lineBreakAtEndOfFile           = false
 }
+ihex.DEFAULT_ENCODE_OPTIONS = DEFAULT_ENCODE_OPTIONS
 
 --- Decode an Intel Hex encoded string to a byte array.
 -- The returned table is an array of decoded bytes,
@@ -165,7 +196,7 @@ local DEFAULT_ENCODE_OPTIONS = {
 -- by the input string, indexed by its respective numeric address.
 -- This table also contains the field `count` which is the
 -- total number of data bytes decoded from the input string.
-local function decode(str, options)
+function ihex.decode(str, options)
     if options then
         assert(type(options) == "table", "expected table, got " .. type(options))
     else
@@ -333,7 +364,7 @@ end
 -- data should be encoded.
 -- @treturn string The Intel Hex encoded representation of the
 -- input byte array.
-local function encode(data, options)
+function ihex.encode(data, options)
     if type(data) ~= "table" then
         error("expected table, got " .. type(data))
     end
@@ -440,43 +471,4 @@ local function encode(data, options)
     return table.concat(result)
 end
 
--- NOTE: Workaround to get LDoc not to complain about this; not sure what
--- the proper way to fix this would be; can't find an answer online. :/
-local _LICENSE = [[
-    MIT License
-
-    Copyright (c) 2021 Scitoshi Nakayobro
-
-    Permission is hereby granted, free of charge, to any person obtaining a copy
-    of this software and associated documentation files (the "Software"), to deal
-    in the Software without restriction, including without limitation the rights
-    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-    copies of the Software, and to permit persons to whom the Software is
-    furnished to do so, subject to the following conditions:
-
-    The above copyright notice and this permission notice shall be included in all
-    copies or substantial portions of the Software.
-
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-    SOFTWARE.
-]]
-
---- @export DEFAULT_DECODE_OPTIONS
--- @export DEFAULT_ENCODE_OPTIONS
--- @export decode
--- @export encode
-return {
-    _DESCRIPTION           = "Intel Hex encoder/decoder",
-    _URL                   = "https://github.com/sci4me/lua-ihex",
-    _VERSION               = "lua-ihex 0.1.1",
-    _LICENSE               = _LICENSE,
-    DEFAULT_DECODE_OPTIONS = DEFAULT_DECODE_OPTIONS,
-    DEFAULT_ENCODE_OPTIONS = DEFAULT_ENCODE_OPTIONS,
-    decode                 = decode,
-    encode                 = encode
-}
+return ihex
