@@ -1,5 +1,5 @@
 #!/bin/bash
-luacheck lua-ihex-dev-1.rockspec
+luacheck ihex-dev-1.rockspec
 STATUS=$?
 [ $STATUS -ne 0 ] && exit 1
 

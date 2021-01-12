@@ -22,7 +22,7 @@ jobs:
           .lua
           .luarocks
           env
-        key: lua-${{ matrix.luaVersion }}-${{ hashFiles('lua-ihex-dev-1.rockspec', '.github/workflows/spec.yml') }}
+        key: lua-${{ matrix.luaVersion }}-${{ hashFiles('ihex-dev-1.rockspec', '.github/workflows/spec.yml') }}
 
     - name: Setup ‘lua’
       if: steps.cache-deps.outputs.cache-hit != 'true'
@@ -37,7 +37,7 @@ jobs:
     - name: Install Dependencies
       if: steps.cache-deps.outputs.cache-hit != 'true'
       run: |
-        luarocks install --only-deps lua-ihex-dev-1.rockspec
+        luarocks install --only-deps ihex-dev-1.rockspec
         luarocks install busted
         luarocks install busted-htest
 

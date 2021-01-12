@@ -1,10 +1,10 @@
-project = "lua-ihex"
+project = "ihex.lua"
 description = "Intel Hex encoder/decoder"
-full_description = "lua-ihex is a simple utility library that facilitates encoding and decoding of Intel Hex formatted data, from and to byte arrays."
-title = "lua-ihex documentation"
+full_description = "ihex.lua is a simple utility library that facilitates encoding and decoding of Intel Hex formatted data, from and to byte arrays."
+title = "ihex.lua documentation"
 dir = "docs"
 style = true
-examples = { "./spec/lua-ihex_spec.lua" }
+examples = { "./spec/ihex_spec.lua" }
 format = "discount"
-file = "./src/lua-ihex/lua-ihex.lua"
+file = "./ihex/ihex.lua"
 readme = "README.md"

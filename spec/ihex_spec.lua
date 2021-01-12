@@ -4,11 +4,11 @@ math.randomseed(os.time())
 
 -- TODO: more thorough test suite!
 
-describe("lua-ihex", function()
+describe("ihex.lua", function()
     local ihex
 
     setup(function()
-        ihex = require "lua-ihex"
+        ihex = require "ihex"
     end)
 
     teardown(function()

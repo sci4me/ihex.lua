@@ -4,11 +4,11 @@
 -- probably-not-that-buggy Intel Hex encoding
 -- and decoding utility library for Lua.
 --
--- `lua-ihex` only has one dependency: `bit32`.
--- Support for using `lua-ihex` without `bit32`
+-- `ihex.lua` only has one dependency: `bit32`.
+-- Support for using `ihex.lua` without `bit32`
 -- may be added in the future.
 --
--- @module lua-ihex
+-- @module ihex.lua
 -- @author sci4me
 -- @license MIT
 -- @copyright Scitoshi Nakayobro 2021
@@ -32,8 +32,8 @@
 
 local ihex = {
     _DESCRIPTION    = "Intel Hex encoder/decoder",
-    _URL            = "https://github.com/sci4me/lua-ihex",
-    _VERSION        = "lua-ihex 0.1.1",
+    _URL            = "https://github.com/sci4me/ihex",
+    _VERSION        = "ihex.lua 0.1.1",
     _LICENSE        = [[
         MIT License
 
@@ -59,12 +59,7 @@ local ihex = {
     ]]
 }
 
-local bit
-if jit then
-    bit = require "bit"
-else
-    bit = require "bit32"
-end
+local bit = jit and require "bit" or require "bit32"
 
 local band   = bit.band
 local lshift = bit.lshift
@@ -349,7 +344,7 @@ end
 -- and ending at index `#data` in the Intel Hex format and return
 -- it as a string.
 --
--- Currently `lua-ihex` does not support encoding disjoint blocks
+-- Currently `ihex.lua` does not support encoding disjoint blocks
 -- of data, as well as start segment address and start linear address
 -- records. Support for these features may be added in the future.
 --
