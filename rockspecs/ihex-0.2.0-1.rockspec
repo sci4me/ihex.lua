@@ -1,7 +1,7 @@
 rockspec_format = "3.0"
 
 package = "ihex"
-version = "0.2.0"
+version = "0.2.0-1"
 
 source = {
     url = "git://github.com/sci4me/ihex.lua.git",
