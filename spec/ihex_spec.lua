@@ -98,7 +98,7 @@ describe("ihex.lua", function()
         for i = 1, N do
             local x = bin[i - 1]
             local y = bit.band(i, 0xFF)
-            assert(x == y, string.format("expected %02X at address %08X, got %02X", y, i, x)) 
+            assert(x == y, string.format("expected %02X at address %08X, got %02X", y, i, x))
         end
     end)
 end)
