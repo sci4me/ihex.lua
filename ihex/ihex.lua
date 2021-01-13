@@ -32,7 +32,7 @@
 
 local ihex = {
     _DESCRIPTION    = "Intel Hex encoder/decoder",
-    _URL            = "https://github.com/sci4me/ihex",
+    _URL            = "https://github.com/sci4me/ihex.lua",
     _VERSION        = "ihex.lua 0.1.1",
     _LICENSE        = [[
         MIT License
